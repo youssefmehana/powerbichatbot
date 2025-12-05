@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>AI Chatbot</title>
+
 <style>
 body { font-family: Arial; margin: 0; padding: 0; }
 .chatbot-btn {
@@ -25,6 +26,7 @@ body { font-family: Arial; margin: 0; padding: 0; }
 input { flex: 1; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
 button { padding: 8px 14px; background: #4e73df; color: white; border: none; border-radius: 6px; cursor: pointer; }
 </style>
+
 </head>
 
 <body>
@@ -42,8 +44,8 @@ button { padding: 8px 14px; background: #4e73df; color: white; border: none; bor
 
 <script>
 function toggleChat() {
-  const win = document.getElementById('chatWindow');
-  win.style.display = win.style.display === "none" ? "flex" : "none";
+  const win = document.getElementById("chatWindow");
+  win.style.display = win.style.display === "flex" ? "none" : "flex";
 }
 
 function addMessage(text, sender) {
@@ -68,19 +70,22 @@ async function sendMessage() {
       body: JSON.stringify({ question: text })
     });
 
+    // 🔍 Check if server returned JSON
     const contentType = response.headers.get("content-type");
-
     if (!contentType || !contentType.includes("application/json")) {
-      addMessage("⚠️ Server error: Response was not JSON.", "Bot");
+      const rawText = await response.text();
+      addMessage("⚠️ Server did NOT return JSON.\nRaw response:\n" + rawText, "Bot");
+      console.error("Raw server response:", rawText);
       return;
     }
 
+    // ✅ Parse JSON safely
     const data = await response.json();
+    addMessage(data.answer || "No response from bot", "Bot");
 
-    addMessage(data.answer || "⚠️ Bot returned no answer.", "Bot");
-  }
-  catch (error) {
-    addMessage("⚠️ Network error: " + error.message, "Bot");
+  } catch (error) {
+    console.error("Error:", error);
+    addMessage("⚠️ Network error or invalid server response.", "Bot");
   }
 }
 </script>
