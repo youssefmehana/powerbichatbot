@@ -61,14 +61,27 @@ async function sendMessage() {
   addMessage(text, "You");
   document.getElementById("userInput").value = "";
 
-  const response = await fetch("https://dashboardchatbot.app.n8n.cloud/webhook/powerbi-groq-chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: text })
-  });
+  try {
+    const response = await fetch("https://dashboardchatbot.app.n8n.cloud/webhook/powerbi-groq-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: text })
+    });
 
-  const data = await response.json();
-  addMessage(data.answer || "No response", "Bot");
+    const contentType = response.headers.get("content-type");
+
+    if (!contentType || !contentType.includes("application/json")) {
+      addMessage("⚠️ Server error: Response was not JSON.", "Bot");
+      return;
+    }
+
+    const data = await response.json();
+
+    addMessage(data.answer || "⚠️ Bot returned no answer.", "Bot");
+  }
+  catch (error) {
+    addMessage("⚠️ Network error: " + error.message, "Bot");
+  }
 }
 </script>
 
